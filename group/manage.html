@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APAY - Administration & Management</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+
+  <!-- Firebase App & Firestore v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col md:flex-row">
+
+  <aside class="w-full md:w-64 bg-white border-r border-slate-200 p-6 flex flex-col justify-between">
+    <div>
+      <div class="flex items-center space-x-2 text-indigo-600 font-bold text-2xl mb-8">
+        <i class="fa-solid fa-vault"></i>
+        <span>APAY <span class="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full font-medium">Admin</span></span>
+      </div>
+      <nav class="space-y-2">
+        <a href="dashboard.html" class="flex items-center space-x-3 text-slate-600 hover:bg-slate-50 p-3 rounded-xl transition">
+          <i class="fa-solid fa-chart-pie w-5"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="manage.html" class="flex items-center space-x-3 bg-indigo-50 text-indigo-600 p-3 rounded-xl font-medium transition">
+          <i class="fa-solid fa-sliders w-5"></i>
+          <span>Gestion / Manage</span>
+        </a>
+      </nav>
+    </div>
+    <div class="mt-8 pt-4 border-t border-slate-100">
+      <button onclick="logout()" class="w-full flex items-center space-x-3 text-red-500 hover:bg-red-50 p-3 rounded-xl transition text-left">
+        <i class="fa-solid fa-arrow-right-from-bracket w-5"></i>
+        <span>Déconnexion</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full">
+    
+    <header class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Panneau d'Administration</h1>
+        <p class="text-slate-500 mt-1">Créez, modifiez et ajustez l'ensemble des comptes utilisateurs de la simulation.</p>
+      </div>
+      <button onclick="toggleModal('modal-create-user')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-sm">
+        <i class="fa-solid fa-user-plus"></i>
+        <span>Nouveau Profil</span>
+      </button>
+    </header>
+
+    <section class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs mb-8">
+      <label for="user-selector" class="block text-sm font-semibold text-slate-700 mb-2">Choisir un compte utilisateur à modifier :</label>
+      <div class="relative">
+        <select id="user-selector" onchange="loadUserData(this.value)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 font-medium">
+          <option value="">-- Sélectionnez un utilisateur --</option>
+        </select>
+        <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-400">
+          <i class="fa-solid fa-chevron-down"></i>
+        </div>
+      </div>
+    </section>
+
+    <div id="editor-zone" class="hidden space-y-8">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+          <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+            <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-user text-indigo-500 mr-2"></i>Profil & Statut</h2>
+            <div id="status-badge"></div>
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Nom Complet</label>
+              <input type="text" id="edit-name" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Code Client (Identifiant)</label>
+              <input type="text" id="edit-clientCode" class="w-full bg-slate-100 border border-slate-200 rounded-lg p-2.5 text-slate-500 cursor-not-allowed" readonly>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Code PIN (Connexion)</label>
+              <input type="text" id="edit-pin" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Nom du Conseiller</label>
+              <input type="text" id="edit-advisor" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Statut du Compte</label>
+            <select id="edit-status" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 font-medium">
+              <option value="actif">Actif (Accès autorisé)</option>
+              <option value="inactif">Inactif (Bloqué)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+          <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3"><i class="fa-solid fa-credit-card text-indigo-500 mr-2"></i>Solde & Carte APAY</h2>
+          
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Solde Principal (€)</label>
+            <input type="number" step="0.01" id="edit-balance" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-lg font-bold text-indigo-600 focus:ring-2 focus:ring-indigo-500">
+          </div>
+
+          <div class="space-y-3 pt-2">
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Numéro de Carte (16 chiffres)</label>
+              <input type="text" id="edit-cardNum" maxlength="19" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 tracking-widest font-mono" placeholder="1234 5678 9101 1213">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Expiration (MM/AA)</label>
+                <input type="text" id="edit-cardExpiry" maxlength="5" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 placeholder-slate-400 font-mono" placeholder="09/45">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Titulaire Carte</label>
+                <input type="text" id="edit-cardHolder" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs lg:col-span-2 space-y-4">
+          <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3"><i class="fa-solid fa-building-columns text-indigo-500 mr-2"></i>Coordonnées du RIB</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Code Banque</label>
+              <input type="text" id="edit-ribBank" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Code Guichet</label>
+              <input type="text" id="edit-ribBranch" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Numéro de Compte</label>
+              <input type="text" id="edit-ribAccount" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">IBAN</label>
+              <input type="text" id="edit-ribIban" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono tracking-wider">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Code BIC / SWIFT</label>
+              <input type="text" id="edit-ribBic" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono">
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs lg:col-span-2 space-y-4">
+          <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3"><i class="fa-solid fa-clock-rotate-left text-indigo-500 mr-2"></i>Ajouter une Opération passée au relevé</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Type de transaction</label>
+              <select id="hist-type" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-medium">
+                <option value="Dépôt">Dépôt</option>
+                <option value="Retrait">Retrait</option>
+                <option value="Versement">Versement</option>
+                <option value="Virement">Virement</option>
+                <option value="Agio">Agio</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Libellé / Description</label>
+              <input type="text" id="hist-label" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5" placeholder="Ex: Versement Salaire, Frais Interêts...">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Montant (€)</label>
+              <input type="number" step="0.01" id="hist-amount" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5" placeholder="Ex: 1500 ou -45">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Date</label>
+              <input type="datetime-local" id="hist-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm">
+            </div>
+          </div>
+          <div class="flex justify-end">
+            <button type="button" onclick="addHistoryItem()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-xl transition">
+              <i class="fa-solid fa-plus mr-1"></i> Injecter la transaction
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex justify-end space-x-4 pt-4 border-t border-slate-200">
+        <button onclick="saveAllChanges()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3.5 rounded-xl transition shadow-md w-full sm:w-auto">
+          <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Enregistrer les modifications du compte
+        </button>
+      </div>
+
+    </div>
+
+  </main>
+
+  <div id="modal-create-user" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white w-full max-w-lg rounded-2xl border border-slate-200 shadow-2xl overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+      <div class="bg-slate-900 text-white p-6 flex justify-between items-center">
+        <h3 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-user-plus text-indigo-400"></i> Créer un nouveau compte</h3>
+        <button onclick="toggleModal('modal-create-user')" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <form id="create-user-form" onsubmit="createNewUser(event)" class="p-6 space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nom Complet</label>
+            <input type="text" id="new-name" required class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500" placeholder="Ex: M. Henri">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Code Client (10 chiffres)</label>
+            <input type="text" id="new-clientCode" required maxlength="10" minlength="10" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono" placeholder="Ex: 5294620168">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Code PIN (6 chiffres)</label>
+            <input type="text" id="new-pin" required maxlength="6" minlength="6" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-mono" placeholder="Ex: 685143">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Solde Initial (€)</label>
+            <input type="number" step="0.01" id="new-balance" required class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 font-bold text-slate-800" value="4000.00">
+          </div>
+        </div>
+        <div class="bg-indigo-50/50 p-3 rounded-xl text-xs text-indigo-700 flex gap-2">
+          <i class="fa-solid fa-circle-info mt-0.5"></i>
+          <span>Les informations complémentaires seront initialisées automatiquement à la création.</span>
+        </div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <button type="button" onclick="toggleModal('modal-create-user')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-4 py-2 rounded-xl transition">Annuler</button>
+          <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl transition shadow-sm">Générer le Compte</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // --- Configuration Firebase ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYBpV95meCzCoLZWGBhbflqLFiqR0mToc",
+      authDomain: "lastone-2ef2f.firebaseapp.com",
+      projectId: "lastone-2ef2f",
+      storageBucket: "lastone-2ef2f.firebasestorage.app",
+      messagingSenderId: "983919060318",
+      appId: "1:983919060318:web:2708d4b4a0ca3e2d7d5bcf"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const USERS_COLLECTION = "users";
+
+    let currentSelectedUserId = null;
+    let localHistoryArray = [];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchUsersList();
+      initDefaultDate();
+    });
+
+    function initDefaultDate() {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('hist-date').value = now.toISOString().slice(0, 16);
+    }
+
+    function toggleModal(modalId) {
+      const modal = document.getElementById(modalId);
+      modal.classList.toggle('hidden');
+    }
+
+    function fetchUsersList() {
+      const selector = document.getElementById('user-selector');
+      
+      db.collection(USERS_COLLECTION).onSnapshot((snapshot) => {
+        const previousSelection = selector.value;
+        selector.innerHTML = '<option value="">-- Sélectionnez un utilisateur --</option>';
+        
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const option = document.createElement('option');
+          option.value = doc.id;
+          // Supporte 'name' ou 'username' pour l'affichage dans la liste déroulante
+          const nameToDisplay = data.name || data.username || "Sans nom";
+          option.textContent = `${nameToDisplay} (${data.clientCode})`;
+          selector.appendChild(option);
+        });
+
+        if (previousSelection && document.querySelector(`#user-selector option[value="${previousSelection}"]`)) {
+          selector.value = previousSelection;
+        } else if (!previousSelection) {
+          document.getElementById('editor-zone').classList.add('hidden');
+        }
+      }, (error) => {
+        console.error(error);
+      });
+    }
+
+    function loadUserData(userId) {
+      if (!userId) {
+        currentSelectedUserId = null;
+        document.getElementById('editor-zone').classList.add('hidden');
+        return;
+      }
+
+      currentSelectedUserId = userId;
+
+      db.collection(USERS_COLLECTION).doc(userId).get().then((doc) => {
+        if (!doc.exists) return;
+        const data = doc.data();
+
+        // Remplissage avec compatibilité double clé name / username
+        const nameValue = data.name || data.username || '';
+        document.getElementById('edit-name').value = nameValue;
+        document.getElementById('edit-clientCode').value = data.clientCode || '';
+        document.getElementById('edit-pin').value = data.pin || '';
+        document.getElementById('edit-advisor').value = data.advisor || 'Conseiller APAY';
+        document.getElementById('edit-status').value = data.status || 'actif';
+        document.getElementById('edit-balance').value = data.balance || 0;
+
+        const badge = document.getElementById('status-badge');
+        if(data.status === 'inactif') {
+          badge.innerHTML = `<span class="bg-red-100 text-red-700 text-xs px-2.5 py-1 rounded-full font-semibold"><i class="fa-solid fa-circle-xmark mr-1"></i>Inactif</span>`;
+        } else {
+          badge.innerHTML = `<span class="bg-emerald-100 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-semibold"><i class="fa-solid fa-circle-check mr-1"></i>Actif</span>`;
+        }
+
+        const card = data.card || {};
+        document.getElementById('edit-cardNum').value = card.number || '';
+        document.getElementById('edit-cardExpiry').value = card.expiry || '';
+        document.getElementById('edit-cardHolder').value = card.holder || '';
+
+        const rib = data.rib || {};
+        document.getElementById('edit-ribBank').value = rib.bankCode || '';
+        document.getElementById('edit-ribBranch').value = rib.branchCode || '';
+        document.getElementById('edit-ribAccount').value = rib.accountNumber || '';
+        document.getElementById('edit-ribIban').value = rib.iban || '';
+        document.getElementById('edit-ribBic').value = rib.bic || '';
+
+        localHistoryArray = data.history || [];
+        document.getElementById('editor-zone').classList.remove('hidden');
+      });
+    }
+
+    function addHistoryItem() {
+      const type = document.getElementById('hist-type').value;
+      const label = document.getElementById('hist-label').value.trim();
+      const amount = parseFloat(document.getElementById('hist-amount').value);
+      const dateVal = document.getElementById('hist-date').value;
+
+      if (!label || isNaN(amount) || !dateVal) {
+        alert("Veuillez remplir correctement tous les champs de l'opération.");
+        return;
+      }
+
+      const newTransaction = {
+        id: "TX-" + Math.floor(Math.random() * 10000000),
+        type: type,
+        label: label,
+        amount: amount,
+        date: new Date(dateVal).toISOString()
+      };
+
+      localHistoryArray.unshift(newTransaction);
+      alert(`Opération ajoutée localement. N'oubliez pas de sauvegarder le compte !`);
+      
+      document.getElementById('hist-label').value = '';
+      document.getElementById('hist-amount').value = '';
+      initDefaultDate();
+    }
+
+    function saveAllChanges() {
+      if (!currentSelectedUserId) return;
+
+      const nameInput = document.getElementById('edit-name').value.trim();
+
+      // IMPORTANT : On enregistre à la fois dans 'name' et dans 'username' pour s'assurer 
+      // que le dashboard trouve l'information peu importe la clé qu'il utilise !
+      const updatedData = {
+        name: nameInput,
+        username: nameInput, 
+        pin: document.getElementById('edit-pin').value.trim(),
+        advisor: document.getElementById('edit-advisor').value.trim(),
+        status: document.getElementById('edit-status').value,
+        balance: parseFloat(document.getElementById('edit-balance').value) || 0,
+        card: {
+          number: document.getElementById('edit-cardNum').value.trim(),
+          expiry: document.getElementById('edit-cardExpiry').value.trim(),
+          holder: document.getElementById('edit-cardHolder').value.trim()
+        },
+        rib: {
+          bankCode: document.getElementById('edit-ribBank').value.trim(),
+          branchCode: document.getElementById('edit-ribBranch').value.trim(),
+          accountNumber: document.getElementById('edit-ribAccount').value.trim(),
+          iban: document.getElementById('edit-ribIban').value.trim(),
+          bic: document.getElementById('edit-ribBic').value.trim()
+        },
+        history: localHistoryArray
+      };
+
+      db.collection(USERS_COLLECTION).doc(currentSelectedUserId).update(updatedData)
+        .then(() => {
+          alert("Compte synchronisé avec succès !");
+          loadUserData(currentSelectedUserId);
+        })
+        .catch((error) => {
+          console.error(error);
+          alert("Erreur lors de l'enregistrement.");
+        });
+    }
+
+    function createNewUser(e) {
+      e.preventDefault();
+
+      const name = document.getElementById('new-name').value.trim();
+      const clientCode = document.getElementById('new-clientCode').value.trim();
+      const pin = document.getElementById('new-pin').value.trim();
+      const balance = parseFloat(document.getElementById('new-balance').value) || 0;
+
+      if(clientCode.length !== 10 || pin.length !== 6) {
+        alert("Erreur de format.");
+        return;
+      }
+
+      // Payload avec double déclaration structurelle name & username
+      const newUserDoc = {
+        name: name,
+        username: name,
+        clientCode: clientCode,
+        pin: pin,
+        balance: balance,
+        status: "actif",
+        advisor: "Conseiller APAY Principal",
+        card: {
+          number: "4000 " + Math.floor(1000 + Math.random() * 9000) + " " + Math.floor(1000 + Math.random() * 9000) + " " + Math.floor(1000 + Math.random() * 9000),
+          expiry: "12/29",
+          holder: name.toUpperCase()
+        },
+        rib: {
+          bankCode: "30004",
+          branchCode: "01234",
+          accountNumber: "000" + Math.floor(10000000 + Math.random() * 90000000),
+          iban: "FR76 3000 4012 3400 0" + Math.floor(10000000 + Math.random() * 90000000) + " 42",
+          bic: "APAYFRPPXXX"
+        },
+        history: [
+          {
+            id: "TX-INIT",
+            type: "Dépôt",
+            label: "Dépôt Initial à la création du compte",
+            amount: balance,
+            date: new Date().toISOString()
+          }
+        ]
+      };
+
+      db.collection(USERS_COLLECTION).add(newUserDoc)
+        .then((docRef) => {
+          alert(`Compte créé pour ${name} !`);
+          document.getElementById('create-user-form').reset();
+          toggleModal('modal-create-user');
+          setTimeout(() => {
+            document.getElementById('user-selector').value = docRef.id;
+            loadUserData(docRef.id);
+          }, 500);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
+
+    function logout() {
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>

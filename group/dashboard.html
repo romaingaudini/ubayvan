@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UBA - Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <link rel="shortcut icon" href="https://i.pinimg.com/236x/ea/96/61/ea9661632c22ca99909ce27eba4e7653.jpg" />
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+ 
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col md:flex-row relative overflow-x-hidden">
+
+  <!-- Bouton Burger (Visible uniquement sur Mobile/Tablette) -->
+  <div class="md:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between sticky top-0 z-40">
+    <div class="flex items-center space-x-2">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLqmJ_zAC0djCrTXrwkpTxeIQz4aBLihapISztIXnkFg&s=10" alt="UBS Logo" class="h-6">
+    </div>
+    <button onclick="toggleMenu()" class="w-10 h-10 flex items-center justify-center text-slate-700 text-xl focus:outline-none">
+      <i class="fa-solid fa-bars" id="burger-icon"></i>
+    </button>
+  </div>
+
+  <!-- Overlay de fermeture arrière-plan (Mobile) -->
+  <div id="sidebar-overlay" onclick="toggleMenu()" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-45 md:hidden transition-opacity duration-300 opacity-0"></div>
+
+  <!-- Slide Menu / Navigation Latérale -->
+  <aside id="sidebar-menu" class="fixed inset-y-0 left-0 w-72 md:w-64 bg-white border-r border-slate-200 p-6 flex flex-col justify-between z-50 md:z-auto md:static transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out md:h-screen md:sticky md:top-0">
+    <div>
+      <div class="flex items-center justify-between md:justify-start space-x-2 text-red-600 font-bold text-2xl mb-8">
+        <div class="flex items-center space-x-2">
+          <div class="w-9 h-9 bg-red-600 rounded-xl flex items-center justify-center text-white text-lg shadow-sm">
+            <i class="fa-solid fa-wallet text-sm"></i>
+          </div>
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLqmJ_zAC0djCrTXrwkpTxeIQz4aBLihapISztIXnkFg&s=10" alt="UBS Logo" class="h-7">
+        </div>
+        <!-- Bouton fermer à l'intérieur du menu sur mobile -->
+        <button onclick="toggleMenu()" class="md:hidden text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+      
+      <nav class="space-y-1">
+        <a href="dashboard.html" class="flex items-center space-x-3 bg-red-50 text-red-600 p-3 rounded-xl font-medium transition">
+          <i class="fa-solid fa-chart-pie w-5 text-lg"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="virement.html" class="flex items-center space-x-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 p-3 rounded-xl transition">
+          <i class="fa-solid fa-paper-plane w-5"></i>
+          <span>Faire un virement</span>
+        </a>
+        <a href="ajouter-beneficiaire.html" class="flex items-center space-x-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 p-3 rounded-xl transition">
+          <i class="fa-solid fa-user-plus w-5"></i>
+          <span>Bénéficiaires</span>
+        </a>
+        <a href="historique.html" class="flex items-center space-x-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 p-3 rounded-xl transition">
+          <i class="fa-solid fa-clock-rotate-left w-5"></i>
+          <span>Historique</span>
+        </a>
+        <a href="mes-cartes.html" class="flex items-center space-x-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 p-3 rounded-xl transition">
+          <i class="fa-solid fa-credit-card w-5"></i>
+          <span>Mes cartes</span>
+        </a>
+        <a href="rib.html" class="flex items-center space-x-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 p-3 rounded-xl transition">
+          <i class="fa-solid fa-building-columns w-5"></i>
+          <span>Mon RIB</span>
+        </a>
+        <a href="profil.html" class="flex items-center space-x-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 p-3 rounded-xl transition">
+          <i class="fa-solid fa-circle-user w-5"></i>
+          <span>Mon Profil</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="mt-8 pt-4 border-t border-slate-100 space-y-4">
+      <div class="bg-slate-50 p-3 rounded-xl flex items-center space-x-3">
+        <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">
+          <i class="fa-solid fa-headset text-sm"></i>
+        </div>
+        <div class="truncate">
+          <p class="text-xs text-slate-400 font-medium">Mon Conseiller</p>
+          <p id="sidebar-advisor" class="text-xs font-semibold text-slate-700 truncate">Chargement...</p>
+        </div>
+      </div>
+      <button onclick="logout()" class="w-full flex items-center space-x-3 text-red-500 hover:bg-red-50 p-3 rounded-xl transition font-medium text-left">
+        <i class="fa-solid fa-arrow-right-from-bracket w-5"></i>
+        <span>Déconnexion</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Section principale de l'application -->
+  <main class="flex-1 p-4 md:p-8 max-w-5xl mx-auto w-full space-y-6">
+    
+    <header class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+          Bonjour <span id="welcome-username">!</span>
+        </h1>
+        <p class="text-slate-500 text-sm mt-0.5" id="current-date"></p>
+      </div>
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-600 relative cursor-pointer hover:bg-slate-50 transition">
+          <i class="fa-regular fa-bell text-lg"></i>
+          <span class="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full"></span>
+        </div>
+        <div class="w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center font-bold" id="user-avatar">
+          
+        </div>
+      </div>
+    </header>
+
+    <div class="bg-gradient-to-br from-red-600 to-indigo-700 rounded-3xl p-6 md:p-8 text-white shadow-xl shadow-red-100/50 relative overflow-hidden">
+      <div class="absolute -right-10 -bottom-10 w-44 h-44 bg-white/5 rounded-full pointer-events-none"></div>
+      <div class="absolute right-1/4 -top-12 w-32 h-32 bg-white/5 rounded-full pointer-events-none"></div>
+      
+      <div class="space-y-1">
+        <span class="text-red-100/80 text-xs font-semibold uppercase tracking-wider">Solde Disponible</span>
+        <h2 class="text-4xl md:text-5xl font-bold tracking-tight" id="balance-display">0,00 €</h2>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3 mt-6 pt-2">
+        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs text-red-100">
+            <span>Restaurant</span>
+            <i class="fa-solid fa-utensils"></i>
+          </div>
+          <p class="text-sm font-bold mt-2">+29,31 €</p>
+        </div>
+        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs text-red-100">
+            <span>Pret Auto </span>
+            <i class="fa-solid fa-car"></i>
+          </div>
+          <p class="text-sm font-bold mt-2">-132,41 €</p>
+        </div>
+        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs text-red-100">
+            <span>Prêt Immobilier</span>
+            <i class="fa-solid fa-house"></i>
+          </div>
+          <p class="text-sm font-bold mt-2">-45 000,81 €</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-indigo-50 border border-indigo-100/80 rounded-2xl p-4 flex items-center justify-between hover:bg-indigo-100/50 transition cursor-pointer">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-lg">
+          <i class="fa-solid fa-award"></i>
+        </div>
+        <div>
+          <h4 class="text-sm font-bold text-indigo-900">COMPTE DISPONIBLE  </h4>
+          <p class="text-xs text-red-600/800 font-medium"> <marquee> Veuillez contacter votre gestionnaire</marquee></p>
+        </div>
+      </div>
+      <i class="fa-solid fa-chevron-right text-indigo-400 text-sm"></i>
+    </div>
+
+    <section>
+      <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Opérations rapides</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <a href="virement.html" class="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col items-center text-center space-y-2 hover:border-red-500 hover:shadow-xs transition group">
+          <div class="w-12 h-12 bg-red-50 group-hover:bg-red-600 rounded-2xl flex items-center justify-center text-red-600 group-hover:text-white transition">
+            <i class="fa-solid fa-paper-plane text-xl"></i>
+          </div>
+          <span class="text-sm font-semibold text-slate-800">Send Money</span>
+        </a>
+        <a href="ajouter-beneficiaire.html" class="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col items-center text-center space-y-2 hover:border-red-500 hover:shadow-xs transition group">
+          <div class="w-12 h-12 bg-amber-50 group-hover:bg-amber-500 rounded-2xl flex items-center justify-center text-amber-600 group-hover:text-white transition">
+            <i class="fa-solid fa-user-plus text-xl"></i>
+          </div>
+          <span class="text-sm font-semibold text-slate-800">Bénéficiaire</span>
+        </a>
+        <a href="mes-cartes.html" class="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col items-center text-center space-y-2 hover:border-red-500 hover:shadow-xs transition group">
+          <div class="w-12 h-12 bg-emerald-50 group-hover:bg-emerald-500 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:text-white transition">
+            <i class="fa-solid fa-credit-card text-xl"></i>
+          </div>
+          <span class="text-sm font-semibold text-slate-800">Mes cartes</span>
+        </a>
+        <a href="rib.html" class="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col items-center text-center space-y-2 hover:border-red-500 hover:shadow-xs transition group">
+          <div class="w-12 h-12 bg-purple-50 group-hover:bg-purple-500 rounded-2xl flex items-center justify-center text-purple-600 group-hover:text-white transition">
+            <i class="fa-solid fa-building-columns text-xl"></i>
+          </div>
+          <span class="text-sm font-semibold text-slate-800">Mon RIB</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="bg-white border border-slate-200 rounded-3xl p-5 md:p-6 shadow-xs">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+        <h3 class="font-bold text-slate-900 text-lg">Transactions récentes</h3>
+        <a href="historique.html" class="text-red-600 hover:text-red-700 font-semibold text-sm transition flex items-center gap-1">
+          <span>Voir tout</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </a>
+      </div>
+
+      <div id="recent-transactions-container" class="divide-y divide-slate-100">
+        <div class="py-6 text-center text-slate-400 text-sm">
+          <i class="fa-solid fa-circle-notch animate-spin mr-2"></i>Chargement des dernières opérations...
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // --- Fonction d'ouverture/fermeture du Slide Menu ---
+    function toggleMenu() {
+      const sidebar = document.getElementById('sidebar-menu');
+      const overlay = document.getElementById('sidebar-overlay');
+      
+      if(sidebar.classList.contains('-translate-x-full')) {
+        // Ouvrir
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+        setTimeout(() => overlay.classList.add('opacity-100'), 10);
+      } else {
+        // Fermer
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.remove('opacity-100');
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+      }
+    }
+
+    // --- Configuration Firebase ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYBpV95meCzCoLZWGBhbflqLFiqR0mToc",
+      authDomain: "lastone-2ef2f.firebaseapp.com",
+      projectId: "lastone-2ef2f",
+      storageBucket: "lastone-2ef2f.firebasestorage.app",
+      messagingSenderId: "983919060318",
+      appId: "1:983919060318:web:2708d4b4a0ca3e2d7d5bcf"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const USERS_COLLECTION = "users";
+
+    const currentUserId = localStorage.getItem('currentUserId');
+    if (!currentUserId) {
+      alert("Session expirée ou inexistante. Veuillez vous reconnecter.");
+      window.location.href = "index.html";
+    }
+
+    const optionsDate = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString('fr-FR', optionsDate);
+
+    // Écouteur en temps réel Firestore
+    db.collection(USERS_COLLECTION).doc(currentUserId).onSnapshot((doc) => {
+      if (!doc.exists) {
+        alert("Erreur : Profil introuvable.");
+        window.location.href = "index.html";
+        return;
+      }
+
+      const userData = doc.data();
+
+      if (userData.status === 'inactif') {
+        alert("Ce compte a été désactivé par l'administrateur.");
+        window.location.href = "index.html";
+        return;
+      }
+
+      const displayName = userData.name || userData.username || "Client APAY";
+      document.getElementById('welcome-username').textContent = `, ${displayName} !`;
+      document.getElementById('user-avatar').textContent = displayName.charAt(0).toUpperCase();
+      document.getElementById('sidebar-advisor').textContent = userData.advisor || 'Conseiller APAY';
+      
+      const rawBalance = Number(userData.balance);
+      const cleanBalance = isNaN(rawBalance) ? 0 : rawBalance;
+
+      const formattedBalance = new Intl.NumberFormat('fr-FR', {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: 2
+      }).format(cleanBalance);
+      
+      document.getElementById('balance-display').textContent = formattedBalance;
+
+      renderRecentTransactions(userData.history || []);
+    }, (error) => {
+      console.error("Erreur d'écoute Firestore: ", error);
+    });
+
+    function renderRecentTransactions(history) {
+      const container = document.getElementById('recent-transactions-container');
+      
+      if (history.length === 0) {
+        container.innerHTML = `<div class="py-8 text-center text-slate-400 text-sm">Aucune opération pour le moment.</div>`;
+        return;
+      }
+
+      const recentOps = history.slice(0, 4);
+      container.innerHTML = "";
+
+      recentOps.forEach((op) => {
+        const isNegative = op.amount < 0;
+        
+        const formattedAmount = new Intl.NumberFormat('fr-FR', {
+          style: 'currency',
+          currency: 'EUR'
+        }).format(op.amount);
+
+        let iconHtml = '<i class="fa-solid fa-arrow-right-arrow-left"></i>';
+        let bgIconClass = 'bg-slate-100 text-slate-600';
+
+        if (op.type === 'Dépôt' || op.type === 'Versement') {
+          iconHtml = '<i class="fa-solid fa-arrow-down-long"></i>';
+          bgIconClass = 'bg-emerald-50 text-emerald-600';
+        } else if (op.type === 'Retrait' || op.type === 'Virement') {
+          iconHtml = '<i class="fa-solid fa-arrow-up-long"></i>';
+          bgIconClass = 'bg-rose-50 text-rose-600';
+        } else if (op.type === 'Agio') {
+          iconHtml = '<i class="fa-solid fa-percent"></i>';
+          bgIconClass = 'bg-amber-50 text-amber-600';
+        }
+
+        const opDate = new Date(op.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+
+        const row = document.createElement('div');
+        row.className = "flex items-center justify-between py-3.5 first:pt-1 last:pb-1 group";
+        row.innerHTML = `
+          <div class="flex items-center space-x-3.5 min-w-0">
+            <div class="w-10 h-10 ${bgIconClass} rounded-xl flex items-center justify-center text-sm shrink-0">
+              ${iconHtml}
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-slate-800 truncate group-hover:text-red-600 transition">${op.label}</p>
+              <p class="text-xs text-slate-400 font-medium">${op.type} • ${opDate}</p>
+            </div>
+          </div>
+          <div class="text-right shrink-0">
+            <p class="text-sm font-bold ${isNegative ? 'text-slate-800' : 'text-emerald-600'}">
+              ${isNegative ? '' : '+'}${formattedAmount}
+            </p>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function logout() {
+      localStorage.removeItem('currentUserId');
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>

